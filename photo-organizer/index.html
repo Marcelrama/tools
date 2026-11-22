@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Local Photo Organizer</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <p class="header__eyebrow">PHOTO ORGANIZER · LOCAL</p>
+        <h1>Review and organize photos</h1>
+        <p class="hint">Find duplicates and similar photos, send unwanted files to the macOS Trash, and organize photos into categories based on their content. Your photos stay on this computer.</p>
+      </header>
+
+      <section class="panel" aria-labelledby="folder-title">
+        <h2 class="panel__title" id="folder-title">1. Photo folder</h2>
+        <p class="hint">Analysis results are saved in <code>photo-organizer-indice.json</code> and <code>photo-organizer-vision.json</code> inside the selected folder. When you return, only new or changed photos are analyzed.</p>
+        <div class="actions">
+          <button id="pick" type="button">Choose folder…</button>
+          <label class="field field--grow">Or paste a path
+            <input id="folder-path" type="text" placeholder="~/Pictures/My photos" autocomplete="off" spellcheck="false" />
+          </label>
+          <button id="open-path" class="actions__secondary" type="button">Open</button>
+        </div>
+        <div class="actions">
+          <button id="analyze" class="actions__secondary" type="button" disabled>Analyze</button>
+          <button id="import" class="actions__secondary" type="button" disabled>Import JSON backup</button>
+          <button id="export" class="actions__secondary" type="button" disabled>Download JSON backup</button>
+        </div>
+        <input id="import-file" type="file" accept=".json,application/json" hidden />
+        <div class="progress" id="progress" hidden><div class="progress__bar" id="progress-bar"></div></div>
+        <p class="status" id="status" role="status" aria-live="polite">Connecting…</p>
+        <p class="hint" id="vision-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <fieldset class="work" id="work" disabled>
+        <div class="tabs" role="tablist">
+          <button id="tab-org" role="tab" type="button" aria-selected="true" aria-controls="view-org">2. Organize by category</button>
+          <button id="tab-dup" role="tab" type="button" aria-selected="false" aria-controls="view-dup">3. Duplicates</button>
+        </div>
+
+        <section class="panel" id="view-org" role="tabpanel" aria-labelledby="tab-org">
+          <h3 class="step" id="org-search-step">1 · Find photos</h3>
+          <div class="actions">
+            <label class="field field--grow">What is in the photo?
+              <input id="org-search" type="text" placeholder="beach, mountain, night, street, people… or part of a folder name" autocomplete="off" />
+            </label>
+            <label class="field">Search in
+              <select id="org-folder"></select>
+            </label>
+          </div>
+          <div class="chips" id="label-chips" aria-label="Common content in your photos"></div>
+          <div class="chips" id="place-row" hidden><span class="hint">Places (GPS):</span><span class="chips" id="place-chips"></span></div>
+          <div class="note" id="org-near" hidden><span id="org-near-name"></span><button id="org-near-clear" class="small actions__secondary" type="button">Clear</button></div>
+          <div class="note" id="org-day" hidden><span id="org-day-name"></span><button id="org-day-clear" class="small actions__secondary" type="button">Clear</button></div>
+          <div class="note" id="org-similar" hidden><span id="org-similar-name"></span><button id="org-similar-clear" class="small actions__secondary" type="button">Clear examples</button></div>
+          <p class="hint">Use “Same place” for photos taken within 1 km, “Same day” for matching dates, or “More like this” for similar content, including photos without GPS. You can combine these filters.</p>
+
+          <h3 class="step">2 · Select photos and copy or move them to a category</h3>
+          <div class="actions actions--sticky">
+            <span class="hint" id="org-count"></span>
+            <button id="org-select-first" class="small actions__secondary" type="button">Select first</button>
+            <label class="field field--number"><span hidden>Count</span><input id="org-first" type="number" min="1" value="50" aria-label="Number to select" /></label>
+            <button id="org-select-all" class="small actions__secondary" type="button">Select all</button>
+            <button id="org-clear" class="small actions__secondary" type="button">Clear selection</button>
+            <button id="org-trash" class="actions__danger small" type="button" disabled>Trash selected</button>
+            <span class="actions__break"></span>
+            <label class="field">Destination category
+              <select id="cat-select"></select>
+            </label>
+            <button id="org-copy" type="button" disabled></button>
+            <button id="org-move" type="button" disabled>Move selected</button>
+            <span class="hint" id="cat-folder"></span>
+            <button id="cat-remove" class="small actions__secondary" type="button" hidden>Remove from list</button>
+            <div class="category-box" id="cat-new" hidden>
+              <strong>New category</strong>
+              <div class="actions">
+                <label class="field">Name
+                  <input id="cat-name" type="text" placeholder="Night" autocomplete="off" />
+                </label>
+                <label class="field field--grow">Where to create the folder
+                  <input id="cat-parent" type="text" placeholder="~/Pictures/Organized photos" autocomplete="off" spellcheck="false" />
+                </label>
+                <button id="cat-pick" class="actions__secondary" type="button">Choose location…</button>
+                <button id="cat-create" type="button" disabled>Create category</button>
+              </div>
+              <p class="hint" id="cat-preview"></p>
+            </div>
+          </div>
+          <p class="hint">Click a photo to select it; Shift + click selects a range. The most similar photos appear first.</p>
+          <div class="photos" id="org-results"></div>
+          <button id="org-more" class="actions__secondary more" type="button" hidden>Show more photos</button>
+        </section>
+
+        <section class="panel" id="view-dup" role="tabpanel" aria-labelledby="tab-dup" hidden>
+          <p class="hint" id="dup-summary"></p>
+          <div class="actions actions--sticky">
+            <label class="field">Show
+              <select id="dup-filter">
+                <option value="all">All groups</option>
+                <option value="exact">Identical copies only</option>
+                <option value="similar">Similar photos only</option>
+              </select>
+            </label>
+            <button id="dup-mark" class="actions__secondary" type="button">Select identical copies (keep one)</button>
+            <button id="dup-clear" class="actions__secondary" type="button">Clear selection</button>
+            <button id="dup-delete" class="actions__danger" type="button" disabled>Trash selected</button>
+          </div>
+          <p class="hint">Click a photo to select it. The first photo in each group is suggested for keeping, based on resolution and file size. Similar photos are grouped by appearance; review them before deleting.</p>
+          <div class="results" id="dup-results"></div>
+          <button id="dup-more" class="actions__secondary more" type="button" hidden>Show more groups</button>
+        </section>
+      </fieldset>
+    </main>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

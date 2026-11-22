@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+.env
+.env.*
+*.log
+photo-organizer-indice.json
+photo-organizer-vision.json
+*backup*.json
+coverage/
